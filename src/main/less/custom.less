@@ -1,0 +1,100 @@
+// Override some defaults
+html, body {
+  background-color: #eee;
+  padding-bottom: 40px;
+}
+
+.main-content {
+  background-color: @white;
+  padding: 20px;
+  margin: 0 -20px; /* negative indent the amount of the padding to maintain the grid system */
+  -webkit-border-radius: 0 0 6px 6px;
+     -moz-border-radius: 0 0 6px 6px;
+          border-radius: 0 0 6px 6px;
+  -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.15);
+     -moz-box-shadow: 0 1px 2px rgba(0,0,0,.15);
+          box-shadow: 0 1px 2px rgba(0,0,0,.15);
+}
+
+.hero-unit {
+  h2 {
+    font-size: 36px;
+  }
+}
+
+/**
+  * Form override
+  */
+form label {
+  font-weight: bold;
+}
+
+// for LiftScreen errors
+.field-error {
+  color: #b94a48;
+}
+.field-warning {
+  color: #c09853;
+}
+.field-success {
+  color: #468847;
+}
+.field-info {
+  color: #5bc0de;
+}
+
+#user img {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  vertical-align: top;
+  margin-right: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+#user-header {
+  line-height: 4em;
+
+  img {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 6px;
+    border: none;
+    cursor: pointer;
+  }
+
+  h3 {
+    display: inline-block;
+  }
+}
+
+div.gravatar {
+  float:left;
+  margin-left:10px;
+  max-width: 320px;
+
+  img {
+    padding-top:10px;
+  }
+}
+
+.main-content {
+    margin-top: 50px;
+}
+
+#contents_id {
+ display: block;
+ width: 100%;
+ min-height: 30px;
+ -webkit-box-sizing: border-box;
+ -moz-box-sizing: border-box;
+ box-sizing: border-box;
+}
+
+// fixes gap between navbar and section below it
+@media (max-width: @navbarCollapseWidth) {
+  .navbar-fixed-top {
+    margin-bottom: 0px;
+  }
+}

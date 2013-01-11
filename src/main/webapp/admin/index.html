@@ -1,0 +1,39 @@
+<div class="row-fluid lift:surround?with=admin-default;at=insert-data-cms">
+    <div class="span8">
+        <h2>Set up your site</h2>
+        <div>
+            <lift:Msgs showAll="false">
+                <lift:error_msg class="alert alert-error"></lift:error_msg>
+                <lift:warning_msg class="alert"></lift:warning_msg>
+                <lift:notice_msg class="alert alert-success"></lift:notice_msg>
+            </lift:Msgs>
+        </div>
+
+        <div class="lift:AdminListPages">
+
+            <ul class="admin-page-list">
+                <li class="item">
+                    Page: <span class="pageTitle">Page 1</span>
+                    (<a href="#" class="visitLink">Show</a>)
+                    <div class="btn-group">
+                     <a class="btn editLink" href="#">Edit</a>
+                     <button class="btn deleteLink" onclick="return confirm('Are you sure?')" href="/">Delete</button>
+                     <a class="btn addSubPage" href="#">Add child page</a>
+                    </div>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+    <div class="span4">
+        <h3>Events</h3>
+        <ul>
+            <li>Event 1</li>
+            <li>Event 1</li>
+            <li>Event 1</li>
+            <li>Event 1</li>
+
+        </ul>
+    </div>
+</div>
+

@@ -1,0 +1,7 @@
+mail.transport.protocol=smtp
+mail.smtp.host=
+mail.smtp.port=587
+mail.smtp.starttls.enable=true
+mail.smtp.auth=true
+mail.user=
+mail.password=""

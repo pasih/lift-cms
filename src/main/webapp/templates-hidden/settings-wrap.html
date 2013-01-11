@@ -1,0 +1,25 @@
+<div lift="surround?with=base-wrap;at=wrap-content">
+  <span lift="CurrentUser.title"></span>
+  <div class="main-content">
+    <div class="page-header">
+      <span lift="CurrentUser.header"></span>
+      <div id="ajax-spinner" class="pull-right" style="display: none;">
+        <img src="/img/spinner.gif" width="16" height="16"/>
+      </div>
+    </div>
+    <div class="row">
+      <div class="span12">
+        <div lift="Notices"></div>
+        <ul class="nav nav-tabs">
+          <span lift="GroupMenu?group=settings"></span>
+        </ul>
+      </div>
+      <div class="span10">
+        <div id="content"></div>
+      </div>
+      <div class="span2">
+      </div>
+    </div>
+  </div>
+  <span lift="embed?what=/templates-hidden/parts/footer"></span>
+</div>
