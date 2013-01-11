@@ -51,7 +51,6 @@ object Site extends Locs {
   ) / "user" >> Loc.CalcValue(() => User.currentUser)
   lazy val profileLoc = profileParamMenu.toLoc
 
-  val admin = MenuLoc(Menu.i("Admin") / "admin" / "index" >> RequireLoggedIn)
   val password = MenuLoc(Menu.i("Password") / "settings" / "password" >> RequireLoggedIn >> SettingsGroup)
   val account = MenuLoc(Menu.i("Account") / "settings" / "account" >> SettingsGroup >> RequireLoggedIn)
   val editProfile = MenuLoc(Menu("EditProfile", "Profile") / "settings" / "profile" >> SettingsGroup >> RequireLoggedIn)
@@ -67,7 +66,6 @@ object Site extends Locs {
     account.menu,
     password.menu,
     editProfile.menu,
-    // TestSnippet.menu,
     Menu.i("About") / "about" >> TopBarGroup,
     Menu.i("Admin") / "admin" / "index" >> AdminGroup,
     MenuGroups.editPage,
