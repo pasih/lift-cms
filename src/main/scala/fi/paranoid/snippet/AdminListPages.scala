@@ -13,10 +13,10 @@ import xml.Text
 
 class AdminListPages extends Logger {
 
-  def deleteLink(page: CustomContent): NodeSeq =
-    page.root.is.getOrElse(false)  match {
+  private def forNonRootPage(page: CustomContent, f: => NodeSeq) =
+    page.root.is.getOrElse(false) match {
       case true => NodeSeq.Empty
-      case false => SHtml.link("", () => ( page.delete_! ), Text(S ? "Delete"))
+      case false => f
     }
 
   class AdminViewRenderer extends ContentTreeItemEntryRenderer {
@@ -24,11 +24,16 @@ class AdminListPages extends Logger {
     override def wrapMain(f: => NodeSeq): NodeSeq = <ul class="admin-page-list">{f}</ul>
 
     override def transformEntry(entry: CustomContent, in: NodeSeq): NodeSeq = {
+      val allpages: Seq[(CustomContent, String)] = CustomContent.findAll.map(a => (a, a.title.is))
       (".editLink [href]" #> MenuGroups.editPage.createLink(Full(entry), Empty)  &
         ".visitLink [href]" #> entry.linkTo &
-        ".deleteLink" #> deleteLink(entry) &
+        ".deleteLink" #> forNonRootPage(entry,
+            SHtml.link("", () => ( entry.delete_!, S.notice(S ? "Page deleted." ) ), Text(S ? "Delete"))) &
         ".addSubPage [href]" #> MenuGroups.editPage.createLink(Empty, Full(entry.id.is.toString)) &
-        ".pageTitle" #> entry.title.is).apply(in)
+        ".pageTitle" #> entry.title.is &
+        ".selectParent" #> forNonRootPage(entry,
+          SHtml.selectObj[CustomContent](allpages, Empty, (p: CustomContent) => {  println(p.title) })
+        )).apply(in)
     }
 
     /* TODO: Move to a template */
@@ -41,11 +46,12 @@ class AdminListPages extends Logger {
           <button class="btn deleteLink" onclick="return confirm('Are you sure?')" href="/">Delete</button>
           <a class="btn addSubPage" href="#">Add child page</a>
         </div>
+        <div class="selectParent"></div>
       </li>
   }
 
   def render = {
-    val walker = new ContentTreeWalker(ContentLocHelper.root, new AdminViewRenderer {})
+    val walker = new ContentTreeWalker(ContentLocHelper.root, new AdminViewRenderer)
     walker.traverse()
   }
 }
