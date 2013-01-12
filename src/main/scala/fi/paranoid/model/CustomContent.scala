@@ -42,6 +42,7 @@ class CustomContent private() extends MongoRecord[CustomContent] with ObjectIdPk
 
   object root extends OptionalBooleanField(this)
 
+  // TODO: cache
   def content: Box[NodeSeq] =
     if (contents.value.nonEmpty)
       Html5.parse("<div>" + contents.value + "</div>")
