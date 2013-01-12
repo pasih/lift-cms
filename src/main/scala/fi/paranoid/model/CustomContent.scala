@@ -5,11 +5,10 @@ import net.liftweb.mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
 import net.liftweb.record.field._
 import net.liftweb.common._
 import net.liftweb.mongodb.BsonDSL._
-import net.liftweb.http._
+import net.liftweb.http.S
 import net.liftweb.util.{FieldContainer, Html5, FieldError}
 import net.liftweb.record.field.StringField
 import net.liftweb.common.Full
-
 import xml.NodeSeq
 import org.bson.types.ObjectId
 
@@ -39,6 +38,8 @@ class CustomContent private() extends MongoRecord[CustomContent] with ObjectIdPk
   object parent extends ObjectIdRefField(this, CustomContent) {
     override def optional_? = true
   }
+
+  object ordering extends LongField(this)
 
   object root extends OptionalBooleanField(this)
 
@@ -80,13 +81,25 @@ object CustomContent extends CustomContent with MongoMetaRecord[CustomContent] w
   def findContent(identifier: String, aspect: String) =
     CustomContent.find("identifier" -> identifier)
 
+  def ltSort(a: CustomContent, b: CustomContent) =
+    a.ordering.is < b.ordering.is
+
+  def findAllInOrder =
+  CustomContent.findAll.sortWith(ltSort)
+
   def findAllRootItems =
     CustomContent.findAll(("parent" -> ("$exists" -> false)))
 
   def findAllChildItems(parent: CustomContent) =
-    CustomContent.findAll(("parent") -> parent.id.is)
+    CustomContent.findAll(("parent") -> parent.id.is).sortWith(ltSort)
 
   def setParent(p: CustomContent) = parent(p.id.is)
+
+  def findByPosition(pos: Long, parent: CustomContent) =
+    CustomContent.find(("ordering" -> pos) ~ ("parent" -> parent.id.is))
+
+  def countChildren(page: CustomContent) =
+    CustomContent.count("parent" -> page.id.is)
 }
 
 object ContentLocHelper extends Logger {

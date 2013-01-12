@@ -4,17 +4,20 @@ import net.liftweb._
 import common.{Empty, Failure, Full, Logger, Box}
 import http._
 import util.Helpers._
-import fi.paranoid.model.{ContentLocHelper, CustomContent}
+import fi.paranoid.model.{User, ContentLocHelper, CustomContent}
 import xml.{NodeSeq, Text}
 import net.liftweb.util.Helpers._
 import util.Html5
+import fi.paranoid.lib.AdminNotification
 
-class AdminEditPage(params: Box[(Box[CustomContent], Box[String])]) extends LiftScreen with Logger {
+
+class AdminEditPage(params: Box[(Box[CustomContent], Box[String])])
+  extends LiftScreen with Logger with AdminNotification {
+
   var page: Box[CustomContent] = Empty
-
   var newPage = false
-
   var parentId: String = ""
+
   (params: @unchecked) match {
     case Full(a) =>
       page = a._1
@@ -56,7 +59,9 @@ class AdminEditPage(params: Box[(Box[CustomContent], Box[String])]) extends Lift
     val c = content.is
     c.aspect("pages")
     parentPage match {
-      case Full(x) => c.parent(x.id.is)
+      case Full(x) =>
+        c.parent(x.id.is)
+        c.ordering(CustomContent.countChildren(x))
       case _ => // No-op
     }
 
@@ -70,10 +75,14 @@ class AdminEditPage(params: Box[(Box[CustomContent], Box[String])]) extends Lift
           "* [onClick]" #> blank).apply(p)
       case _ => NodeSeq.Empty
     }
-
     warn(filteredContent)
 
     c.save
     S.notice("Page '" + c.title.is + "' added!")
+
+    if (newPage)
+      showEvent(S ? "#u added page: '%s'".format(c.title.is), updateTreeView = true)
+    else
+      showEvent(S ? "#u edited page: '%s'".format(c.title.is), updateTreeView = true)
   }
 }

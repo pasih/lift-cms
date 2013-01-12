@@ -7,30 +7,12 @@
             <lift:notice_msg class="alert alert-success"></lift:notice_msg>
         </div>
 
-        <div class="lift:AdminListPages">
-
-            <ul class="admin-page-list">
-                <li class="item">
-                    Page: <span class="pageTitle">Page 1</span>
-                    (<a href="#" class="visitLink">Show</a>)
-                    <div class="btn-group">
-                     <a class="btn editLink" href="#">Edit</a>
-                     <button class="btn deleteLink" onclick="return confirm('Are you sure?')" href="/">Delete</button>
-                     <a class="btn addSubPage" href="#">Add child page</a>
-                    </div>
-                </li>
-            </ul>
-
-        </div>
+        <div class="lift:AdminListPages"><div></div></div>
     </div>
-    <div class="span4">
+    <div id="adminTreeView" class="span4 lift:comet?type=AdminView">
         <h3>Events</h3>
         <ul>
-            <li>Event 1</li>
-            <li>Event 1</li>
-            <li>Event 1</li>
-            <li>Event 1</li>
-
+            <li><span class="event">Event 1</span> <span class="time">(at &lt;time&gt;)</span></li>
         </ul>
     </div>
 </div>

@@ -12,6 +12,11 @@ import sitemap.Loc._
 import net.liftmodules.mongoauth.Locs
 import lib.BaseContentLoc
 import snippet.AdminEditPage
+import org.joda.time.format.DateTimeFormat
+
+object SiteUtils {
+  val dateFormat = DateTimeFormat.forPattern("d.M.Y, H:m")
+}
 
 object MenuGroups extends Logger {
   val SettingsGroup = LocGroup("settings")
