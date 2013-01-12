@@ -5,10 +5,9 @@ import common.{Empty, Failure, Full, Logger, Box}
 import http._
 import util.Helpers._
 import fi.paranoid.model.{ContentLocHelper, CustomContent}
-import java.util.Date
-import fi.paranoid.config.MenuGroups
-import org.bson.types.ObjectId
-import xml.NodeSeq
+import xml.{NodeSeq, Text}
+import net.liftweb.util.Helpers._
+import util.Html5
 
 class AdminEditPage(params: Box[(Box[CustomContent], Box[String])]) extends LiftScreen with Logger {
   var page: Box[CustomContent] = Empty
@@ -60,6 +59,20 @@ class AdminEditPage(params: Box[(Box[CustomContent], Box[String])]) extends Lift
       case Full(x) => c.parent(x.id.is)
       case _ => // No-op
     }
+
+    val data = c.contents.is
+    val blank: Option[String] = None
+    val parsedContent = Html5.parse("<div>" + data + "</div>")
+    val filteredContent = parsedContent match {
+      // TODO use filteredContent
+      case Full(p) =>
+        ("script" #> NodeSeq.Empty &
+          "* [onClick]" #> blank).apply(p)
+      case _ => NodeSeq.Empty
+    }
+
+    warn(filteredContent)
+
     c.save
     S.notice("Page '" + c.title.is + "' added!")
   }
