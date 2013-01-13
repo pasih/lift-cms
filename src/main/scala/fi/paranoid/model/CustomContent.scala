@@ -100,6 +100,29 @@ object CustomContent extends CustomContent with MongoMetaRecord[CustomContent] w
 
   def countChildren(page: CustomContent) =
     CustomContent.count("parent" -> page.id.is)
+
+  def foreachChild(p: CustomContent, f: CustomContent => Unit) {
+    CustomContent.findAllChildItems(p).foreach(a => {
+      foreachChild(a, f)
+      f(a)
+    })
+  }
+
+  def deletePage(page: CustomContent) {
+    def del(p: CustomContent) {
+      warn("Deleting page: " + p.title.is)
+      p.delete_!
+    }
+    CustomContent.foreachChild(page, del)
+    warn("Deleting page: " + page.title.is)
+    val parent = page.parent.obj
+    page.delete_!
+    if (!parent.isEmpty) {
+      /* Reorder children */
+      val children = CustomContent.findAllChildItems(parent.open_!)
+      children.foldLeft(0)((a, b) => { b.ordering(a).save; a + 1 })
+    }
+  }
 }
 
 object ContentLocHelper extends Logger {

@@ -1,14 +1,12 @@
 package fi.paranoid.comet
 
 import net.liftweb._
-import common.{Logger, Box, Empty}
+import common.{Full, Logger, Box, Empty}
 import http._
+import http.js.JsCmds.Replace
 import util._
 import collection.mutable
 import fi.paranoid.config.SiteUtils
-import fi.paranoid.snippet.AdminListPages
-
-object outerHolder extends RequestVar[Box[IdMemoizeTransform]](Empty)
 
 class AdminView extends CometActor with CometListener with Logger {
   private var msgs: mutable.IndexedSeq[EventInfo] = mutable.IndexedSeq()
@@ -20,9 +18,6 @@ class AdminView extends CometActor with CometListener with Logger {
   }
 
   def render = {
-    SHtml.ajaxInvoke(() => outerHolder.is.foreach(a => {
-        a.setHtml()
-    }))
     "li *" #> msgs.reverse.map(m =>
       ".time" #> ("(" + m.at.toString(SiteUtils.dateFormat) + ")") &
         ".event" #> m.msg

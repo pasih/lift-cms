@@ -1,5 +1,5 @@
 <div class="row-fluid lift:surround?with=admin-default;at=insert-data-cms">
-    <div class="span8">
+    <div class="span10">
         <h2>Set up your site</h2>
         <div class="lift:Msgs?showAll=false">
             <lift:error_msg class="alert alert-error"></lift:error_msg>
@@ -7,9 +7,9 @@
             <lift:notice_msg class="alert alert-success"></lift:notice_msg>
         </div>
 
-        <div class="lift:AdminListPages"><div></div></div>
+        <div id="adminTreeView" class="lift:AdminListPages"><div></div></div>
     </div>
-    <div id="adminTreeView" class="span4 lift:comet?type=AdminView">
+    <div id="adminEventsView" class="span2 lift:comet?type=AdminView">
         <h3>Events</h3>
         <ul>
             <li><span class="event">Event 1</span> <span class="time">(at &lt;time&gt;)</span></li>

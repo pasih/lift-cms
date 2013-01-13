@@ -5,11 +5,12 @@ import http._
 import common._
 import fi.paranoid.model.{ContentLocHelper, CustomContent}
 import fi.paranoid.config.MenuGroups
-import xml.{NodeSeq, Text}
+import xml.NodeSeq
 import net.liftweb.util.Helpers._
 import fi.paranoid.lib.{AdminNotification, ContentTreeWalker, ContentTreeItemEntryRenderer}
 import xml.Text
-import fi.paranoid.comet.outerHolder
+
+object outerHolder extends RequestVar[Box[IdMemoizeTransform]](Empty)
 
 class AdminListPages extends Logger with AdminNotification {
 
@@ -26,7 +27,7 @@ class AdminListPages extends Logger with AdminNotification {
   private def deletePage(page: CustomContent) {
     S.notice(S ? "Page '%s' deleted.".format(page.title.is))
     showEvent("#u deleted page '%s'".format(page.title.is), updateTreeView = true)
-    page.delete_!
+    CustomContent.deletePage(page)
   }
 
   private def moveUp(page: CustomContent, f: => NodeSeq) =
@@ -105,11 +106,10 @@ class AdminListPages extends Logger with AdminNotification {
       </li>
   }
 
-  def render = {
+  def render =
     SHtml.idMemoize(outer => {
-      outerHolder.set(Full(outer))
       val walker = new ContentTreeWalker(ContentLocHelper.root, new AdminViewRenderer)
       "div" #> walker.traverse()
     })
-  }
 }
+
