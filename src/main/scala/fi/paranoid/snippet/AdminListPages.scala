@@ -10,6 +10,9 @@ import net.liftweb.util.Helpers._
 import fi.paranoid.lib.{AdminNotification, ContentTreeWalker, ContentTreeItemEntryRenderer}
 import xml.Text
 
+/* TODO:
+  Allow reparenting to upper level
+ */
 class AdminListPages extends Logger with AdminNotification {
 
   trait Direction
@@ -82,9 +85,6 @@ class AdminListPages extends Logger with AdminNotification {
            SHtml.link("", () => ( doReorder(entry, DirUp()) ), Text(S ? "Move up")))) &
          ".moveDown" #> forNonRootPage(entry, moveDown(entry,
            SHtml.link("", () => ( doReorder(entry, DirDown()) ), Text(S ? "Move down"))))
-  //        ".selectParent" #> forNonRootPage(entry,
-  //          SHtml.selectObj[ContentPage](allpages, Empty, (p: ContentPage) => {  println(p.title) })
-  //        )
         ).apply(in)
     }
 

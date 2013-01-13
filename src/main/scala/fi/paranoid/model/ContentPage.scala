@@ -67,7 +67,7 @@ class ContentPage private() extends MongoRecord[ContentPage] with ObjectIdPk[Con
 object ContentPage extends ContentPage with MongoMetaRecord[ContentPage] with Logger {
   def findContentById(id: String): Box[ContentPage] =
     id match {
-      case "addnew:page" =>
+      case "addnew:page" => // TODO: Remove
         Full(ContentLocHelper.NullCustomContent)
       case _ =>
         try {
@@ -78,8 +78,10 @@ object ContentPage extends ContentPage with MongoMetaRecord[ContentPage] with Lo
     }
 
   // TODO: Check aspect == home or pages
-  def findContent(identifier: String, aspect: String) =
+  def findContent(identifier: String, aspect: String) = {
+    warn("find content id: %s aspect: %s".format(identifier, aspect))
     ContentPage.find("identifier" -> identifier)
+  }
 
   def ltSort(a: ContentPage, b: ContentPage) =
     a.ordering.is < b.ordering.is
