@@ -12,8 +12,8 @@ import net.liftweb.common.Full
 import xml.NodeSeq
 import org.bson.types.ObjectId
 
-class CustomContent private() extends MongoRecord[CustomContent] with ObjectIdPk[CustomContent] with Logger {
-  def meta = CustomContent
+class ContentPage private() extends MongoRecord[ContentPage] with ObjectIdPk[ContentPage] with Logger {
+  def meta = ContentPage
 
   object title extends StringField(this, 512) {
     override def validations = valMinLen(1, S ? "Title cannot be blank") _ ::
@@ -35,7 +35,7 @@ class CustomContent private() extends MongoRecord[CustomContent] with ObjectIdPk
 
   object publishAt extends DateTimeField(this)
 
-  object parent extends ObjectIdRefField(this, CustomContent) {
+  object parent extends ObjectIdRefField(this, ContentPage) {
     override def optional_? = true
   }
 
@@ -57,21 +57,21 @@ class CustomContent private() extends MongoRecord[CustomContent] with ObjectIdPk
   def linkTo = "/" + aspect.is + "/" + identifier.is
 
   def uniqueIdentifier(errorMsg: ⇒ String)(identifier: String): List[FieldError] =
-    CustomContent.findContent(identifier, "pages") match {
+    ContentPage.findContent(identifier, "pages") match {
       case Full(p) if p.id.is == this.id.is => Nil // don't error on an update to this page
       case Full(p) => FieldError(this.identifier, errorMsg) :: Nil
       case _ => Nil
     }
 }
 
-object CustomContent extends CustomContent with MongoMetaRecord[CustomContent] with Logger {
-  def findContentById(id: String): Box[CustomContent] =
+object ContentPage extends ContentPage with MongoMetaRecord[ContentPage] with Logger {
+  def findContentById(id: String): Box[ContentPage] =
     id match {
       case "addnew:page" =>
         Full(ContentLocHelper.NullCustomContent)
       case _ =>
         try {
-          CustomContent.find(new ObjectId(id))
+          ContentPage.find(new ObjectId(id))
         } catch {
           case _: IllegalArgumentException => Empty
         }
@@ -79,47 +79,47 @@ object CustomContent extends CustomContent with MongoMetaRecord[CustomContent] w
 
   // TODO: Check aspect == home or pages
   def findContent(identifier: String, aspect: String) =
-    CustomContent.find("identifier" -> identifier)
+    ContentPage.find("identifier" -> identifier)
 
-  def ltSort(a: CustomContent, b: CustomContent) =
+  def ltSort(a: ContentPage, b: ContentPage) =
     a.ordering.is < b.ordering.is
 
   def findAllInOrder =
-  CustomContent.findAll.sortWith(ltSort)
+  ContentPage.findAll.sortWith(ltSort)
 
   def findAllRootItems =
-    CustomContent.findAll(("parent" -> ("$exists" -> false)))
+    ContentPage.findAll(("parent" -> ("$exists" -> false)))
 
-  def findAllChildItems(parent: CustomContent) =
-    CustomContent.findAll(("parent") -> parent.id.is).sortWith(ltSort)
+  def findAllChildItems(parent: ContentPage) =
+    ContentPage.findAll(("parent") -> parent.id.is).sortWith(ltSort)
 
-  def setParent(p: CustomContent) = parent(p.id.is)
+  def setParent(p: ContentPage) = parent(p.id.is)
 
-  def findByPosition(pos: Long, parent: CustomContent) =
-    CustomContent.find(("ordering" -> pos) ~ ("parent" -> parent.id.is))
+  def findByPosition(pos: Long, parent: ContentPage) =
+    ContentPage.find(("ordering" -> pos) ~ ("parent" -> parent.id.is))
 
-  def countChildren(page: CustomContent) =
-    CustomContent.count("parent" -> page.id.is)
+  def countChildren(page: ContentPage) =
+    ContentPage.count("parent" -> page.id.is)
 
-  def foreachChild(p: CustomContent, f: CustomContent => Unit) {
-    CustomContent.findAllChildItems(p).foreach(a => {
+  def foreachChild(p: ContentPage, f: ContentPage => Unit) {
+    ContentPage.findAllChildItems(p).foreach(a => {
       foreachChild(a, f)
       f(a)
     })
   }
 
-  def deletePage(page: CustomContent) {
-    def del(p: CustomContent) {
+  def deletePage(page: ContentPage) {
+    def del(p: ContentPage) {
       warn("Deleting page: " + p.title.is)
       p.delete_!
     }
-    CustomContent.foreachChild(page, del)
+    ContentPage.foreachChild(page, del)
     warn("Deleting page: " + page.title.is)
     val parent = page.parent.obj
     page.delete_!
     if (!parent.isEmpty) {
       /* Reorder children */
-      val children = CustomContent.findAllChildItems(parent.open_!)
+      val children = ContentPage.findAllChildItems(parent.open_!)
       children.foldLeft(0)((a, b) => { b.ordering(a).save; a + 1 })
     }
   }
@@ -134,18 +134,18 @@ object ContentLocHelper extends Logger {
       case _: IllegalArgumentException => Empty
     }
 
-  lazy val item = CustomContent.createRecord
+  lazy val item = ContentPage.createRecord
     .title("")
     .contents("")
     .aspect("pages")
 
   def NullCustomContent = item
-  var root: CustomContent = null
+  var root: ContentPage = null
 
   def ensureRoot() {
-    root = CustomContent.find(("root") -> true) openOr {
+    root = ContentPage.find(("root") -> true) openOr {
       info("No root page found. Adding root page.")
-      CustomContent.createRecord.aspect("home").title("home").identifier("root").root(true).save
+      ContentPage.createRecord.aspect("home").title("home").identifier("root").root(true).save
     }
   }
 }

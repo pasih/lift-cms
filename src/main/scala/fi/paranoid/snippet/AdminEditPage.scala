@@ -3,18 +3,17 @@ package fi.paranoid.snippet
 import net.liftweb._
 import common.{Empty, Failure, Full, Logger, Box}
 import http._
-import util.Helpers._
-import fi.paranoid.model.{User, ContentLocHelper, CustomContent}
-import xml.{NodeSeq, Text}
+import fi.paranoid.model.{ContentLocHelper, ContentPage}
+import xml.NodeSeq
 import net.liftweb.util.Helpers._
 import util.Html5
 import fi.paranoid.lib.AdminNotification
 
 
-class AdminEditPage(params: Box[(Box[CustomContent], Box[String])])
+class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
   extends LiftScreen with Logger with AdminNotification {
 
-  var page: Box[CustomContent] = Empty
+  var page: Box[ContentPage] = Empty
   var newPage = false
   var parentId: String = ""
 
@@ -32,11 +31,11 @@ class AdminEditPage(params: Box[(Box[CustomContent], Box[String])])
       S.redirectTo("/admin/")
     case Empty =>
       newPage = true
-      CustomContent.createRecord.aspect("pages")
+      ContentPage.createRecord.aspect("pages")
   }
   object content extends ScreenVar(editingPage)
 
-  val parentPage: Box[CustomContent] = CustomContent.findContentById(parentId.toString)
+  val parentPage: Box[ContentPage] = ContentPage.findContentById(parentId.toString)
   warn(parentPage)
 
   override def screenTop = newPage match {
@@ -61,7 +60,7 @@ class AdminEditPage(params: Box[(Box[CustomContent], Box[String])])
     parentPage match {
       case Full(x) =>
         c.parent(x.id.is)
-        c.ordering(CustomContent.countChildren(x))
+        c.ordering(ContentPage.countChildren(x))
       case _ => // No-op
     }
 

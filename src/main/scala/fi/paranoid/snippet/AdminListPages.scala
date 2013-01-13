@@ -3,14 +3,12 @@ package fi.paranoid.snippet
 import net.liftweb._
 import http._
 import common._
-import fi.paranoid.model.{ContentLocHelper, CustomContent}
+import fi.paranoid.model.{ContentLocHelper, ContentPage}
 import fi.paranoid.config.MenuGroups
 import xml.NodeSeq
 import net.liftweb.util.Helpers._
 import fi.paranoid.lib.{AdminNotification, ContentTreeWalker, ContentTreeItemEntryRenderer}
 import xml.Text
-
-object outerHolder extends RequestVar[Box[IdMemoizeTransform]](Empty)
 
 class AdminListPages extends Logger with AdminNotification {
 
@@ -18,26 +16,26 @@ class AdminListPages extends Logger with AdminNotification {
   case class DirUp() extends Direction
   case class DirDown() extends Direction
 
-  private def forNonRootPage(page: CustomContent, f: => NodeSeq) =
+  private def forNonRootPage(page: ContentPage, f: => NodeSeq) =
     page.root.is.getOrElse(false) match {
       case true => NodeSeq.Empty
       case false => f
     }
 
-  private def deletePage(page: CustomContent) {
+  private def deletePage(page: ContentPage) {
     S.notice(S ? "Page '%s' deleted.".format(page.title.is))
     showEvent("#u deleted page '%s'".format(page.title.is), updateTreeView = true)
-    CustomContent.deletePage(page)
+    ContentPage.deletePage(page)
   }
 
-  private def moveUp(page: CustomContent, f: => NodeSeq) =
+  private def moveUp(page: ContentPage, f: => NodeSeq) =
     page.ordering.is match {
       case 0 => NodeSeq.Empty
       case _ => f
     }
 
-  private def moveDown(page: CustomContent, f: => NodeSeq) = {
-    val n = CustomContent.countChildren(page.parent.obj.open_!) // TODO: open_!
+  private def moveDown(page: ContentPage, f: => NodeSeq) = {
+    val n = ContentPage.countChildren(page.parent.obj.open_!) // TODO: open_!
     warn("Page has " + n + " children.")
     if (page.ordering.is == n - 1)
       NodeSeq.Empty
@@ -45,7 +43,7 @@ class AdminListPages extends Logger with AdminNotification {
       f
   }
 
-  private def doReorder(page: CustomContent, direction: Direction) {
+  private def doReorder(page: ContentPage, direction: Direction) {
     val posLookupDir = direction match {
       case DirUp() => ((pos: Long) => (pos - 1))
       case DirDown() => ((pos: Long) => (pos + 1))
@@ -55,7 +53,7 @@ class AdminListPages extends Logger with AdminNotification {
       return
     }
     val pos1: Long = page.ordering.is
-    val page2Box = CustomContent.findByPosition(posLookupDir(pos1), page.parent.obj.open_!)
+    val page2Box = ContentPage.findByPosition(posLookupDir(pos1), page.parent.obj.open_!)
     if (page2Box.isEmpty) {
       warn("Warning, no previous item.")
       return
@@ -71,8 +69,8 @@ class AdminListPages extends Logger with AdminNotification {
 
     override def wrapMain(f: => NodeSeq): NodeSeq = <ul class="admin-page-list">{f}</ul>
 
-    override def transformEntry(entry: CustomContent, in: NodeSeq): NodeSeq = {
-      CustomContent.findAllInOrder.map(a => (a, a.title.is))
+    override def transformEntry(entry: ContentPage, in: NodeSeq): NodeSeq = {
+      ContentPage.findAllInOrder.map(a => (a, a.title.is))
         (".editLink [href]" #> MenuGroups.editPage.createLink(Full(entry), Empty)  &
          ".order" #> entry.ordering.is.toString &
          ".visitLink [href]" #> entry.linkTo &
@@ -85,7 +83,7 @@ class AdminListPages extends Logger with AdminNotification {
          ".moveDown" #> forNonRootPage(entry, moveDown(entry,
            SHtml.link("", () => ( doReorder(entry, DirDown()) ), Text(S ? "Move down"))))
   //        ".selectParent" #> forNonRootPage(entry,
-  //          SHtml.selectObj[CustomContent](allpages, Empty, (p: CustomContent) => {  println(p.title) })
+  //          SHtml.selectObj[ContentPage](allpages, Empty, (p: ContentPage) => {  println(p.title) })
   //        )
         ).apply(in)
     }
@@ -108,6 +106,7 @@ class AdminListPages extends Logger with AdminNotification {
 
   def render =
     SHtml.idMemoize(outer => {
+      /* TODO */
       val walker = new ContentTreeWalker(ContentLocHelper.root, new AdminViewRenderer)
       "div" #> walker.traverse()
     })

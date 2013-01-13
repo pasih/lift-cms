@@ -1,7 +1,7 @@
 package fi.paranoid
 package config
 
-import model.{ContentLocHelper, CustomContent, User}
+import model.{ContentLocHelper, ContentPage, User}
 
 import net.liftweb._
 import common._
@@ -22,12 +22,12 @@ object MenuGroups extends Logger {
   val SettingsGroup = LocGroup("settings")
   val TopBarGroup = LocGroup("topbar")
   val AdminGroup = LocGroup("admin")
-  val editPage = Menu.params[(Box[CustomContent], Box[String])]("Edit page", "Edit page",
+  val editPage = Menu.params[(Box[ContentPage], Box[String])]("Edit page", "Edit page",
       {
         case a :: b :: Nil =>
-          Full((CustomContent.findContentById(a), Full(b)))
+          Full((ContentPage.findContentById(a), Full(b)))
         case a :: Nil =>
-          Full((CustomContent.findContentById(a), Empty))
+          Full((ContentPage.findContentById(a), Empty))
         case _ =>
           Empty
       }, pp =>
