@@ -95,6 +95,7 @@ object ContentPage extends ContentPage with MongoMetaRecord[ContentPage] with Lo
   def findAllChildItems(parent: ContentPage) =
     ContentPage.findAll(("parent") -> parent.id.is).sortWith(ltSort)
 
+  // TODO: fix page order
   def setParent(p: ContentPage) = parent(p.id.is)
 
   def findByPosition(pos: Long, parent: ContentPage) =

@@ -16,11 +16,11 @@ class BaseContentLoc(val name: String, _aspect: String) extends Loc[ContentPage]
 
   override def childValues = ContentPage.findAllChildItems(ContentLocHelper.root)
 
-  def foo(e: ContentPage): List[MenuItem] =
+  def generateChildMenus(e: ContentPage): List[MenuItem] =
     for {
       p <- ContentPage.findAllChildItems(e)
       l <- link.createLink(p).map(appendQueryParams(p))
-    } yield MenuItem(text.text(p), l, foo(p),
+    } yield MenuItem(text.text(p), l, generateChildMenus(p),
       (currentValue openOr ContentLocHelper.NullCustomContent).identifier.is == p.identifier.is,
       false,
       allParams.flatMap {
@@ -30,7 +30,7 @@ class BaseContentLoc(val name: String, _aspect: String) extends Loc[ContentPage]
 
   /* TODO: fix page equality test */
   override def supplimentalKidMenuItems: List[MenuItem] =
-    foo(ContentLocHelper.root)
+    generateChildMenus(ContentLocHelper.root)
 
   def params = List(Loc.PlaceHolder, Loc.Template(myTemplate), Loc.LocGroup("topbar"))
 
