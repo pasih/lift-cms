@@ -10,7 +10,7 @@ import util.Helpers._
 
 import fi.paranoid._
 import config._
-import lib.Gravatar
+import lib.{CmsStructure, CoreDispatcher, Gravatar}
 import model.{ContentLocHelper, SystemUser, User}
 import snippet.Notices
 
@@ -82,5 +82,8 @@ class Boot extends Loggable {
 
     // Make sure we have a CMS root
     ContentLocHelper.ensureRoot()
+
+    CmsStructure.load()
+    LiftRules.statelessDispatchTable.append(CoreDispatcher)
   }
 }

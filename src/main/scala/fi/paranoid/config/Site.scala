@@ -5,7 +5,7 @@ import model.{ContentLocHelper, ContentPage, User}
 
 import net.liftweb._
 import common._
-import http.{LiftRules, S}
+import http.{Templates, LiftRules, S}
 import sitemap._
 import sitemap.Loc._
 
