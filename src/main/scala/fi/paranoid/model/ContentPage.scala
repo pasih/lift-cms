@@ -120,11 +120,9 @@ object ContentPage extends ContentPage with MongoMetaRecord[ContentPage] with Lo
     warn("Deleting page: " + page.title.is)
     val parent = page.parent.obj
     page.delete_!
-    if (!parent.isEmpty) {
-      /* Reorder children */
-      val children = ContentPage.findAllChildItems(parent.open_!)
-      children.foldLeft(0)((a, b) => { b.ordering(a).save; a + 1 })
-    }
+    parent.headOption.foreach (
+      ContentPage.findAllChildItems(_).foldLeft(0)((a, b) => { b.ordering(a).save; a + 1 })
+    )
   }
 }
 
