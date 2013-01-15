@@ -56,7 +56,8 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
 
   protected def finish() {
     val c = content.is
-    c.aspect("pages")
+    if (c.aspect.is != "home")
+      c.aspect("pages")
     parentPage match {
       case Full(x) =>
         c.parent(x.id.is)
