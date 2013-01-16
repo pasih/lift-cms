@@ -10,7 +10,6 @@ import sitemap._
 import sitemap.Loc._
 
 import net.liftmodules.mongoauth.Locs
-import lib.BaseContentLoc
 import snippet.AdminEditPage
 import org.joda.time.format.DateTimeFormat
 
@@ -73,11 +72,10 @@ object Site extends Locs {
     editProfile.menu,
     Menu.i("About") / "about" >> TopBarGroup,
     Menu.i("Admin") / "admin" / "index" >> AdminGroup,
-    MenuGroups.editPage,
     Menu.i("Throw") / "throw" >> Hidden,
     Menu.i("Error") / "error" >> Hidden,
     Menu.i("404") / "404" >> Hidden,
-    Menu(new BaseContentLoc("HomePage", "pages"))
+    MenuGroups.editPage
   )
 
   LiftRules.snippetDispatch.append {

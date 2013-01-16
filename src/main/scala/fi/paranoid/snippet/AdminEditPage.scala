@@ -31,7 +31,7 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
       S.redirectTo("/admin/")
     case Empty =>
       newPage = true
-      ContentPage.createRecord.aspect("pages")
+      ContentPage.createRecord
   }
   object content extends ScreenVar(editingPage)
 
@@ -56,8 +56,6 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
 
   protected def finish() {
     val c = content.is
-    if (c.aspect.is != "home")
-      c.aspect("pages")
     parentPage match {
       case Full(x) =>
         c.parent(x.id.is)

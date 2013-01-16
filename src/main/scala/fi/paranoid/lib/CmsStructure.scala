@@ -4,8 +4,7 @@ import fi.paranoid.model.{ContentLocHelper, ContentPage}
 import net.liftweb.common._
 
 class CmsNode(val page: ContentPage) extends Logger {
-  val identifier = page.identifier.is
-  val pos = page.ordering.is
+  private val identifier = page.identifier.is
 
   var parent: CmsNode = null
 
@@ -14,7 +13,7 @@ class CmsNode(val page: ContentPage) extends Logger {
   def addChild(node: CmsNode) = {
     node.parent = this
     children ::= node
-    warn("Adding node %s (parent: %s)".format(node.identifier, this.identifier))
+    info("Adding node %s (parent: %s)".format(node.identifier, this.identifier))
     node
   }
 

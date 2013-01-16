@@ -8,7 +8,7 @@ import net.liftweb.mongodb.BsonDSL._
 import net.liftweb.http.S
 import net.liftweb.util.{FieldContainer, Html5, FieldError}
 import net.liftweb.record.field.StringField
-import net.liftweb.common.Full
+import net.liftweb.common.{Full, Box}
 import xml.NodeSeq
 import org.bson.types.ObjectId
 
@@ -31,8 +31,6 @@ class ContentPage private() extends MongoRecord[ContentPage] with ObjectIdPk[Con
 
   object contents extends TextareaField(this, 1048576)
 
-  object aspect extends StringField(this, 512)
-
   object publishAt extends DateTimeField(this)
 
   object parent extends ObjectIdRefField(this, ContentPage) {
@@ -54,14 +52,20 @@ class ContentPage private() extends MongoRecord[ContentPage] with ObjectIdPk[Con
     def allFields = List(title, identifier, contents)
   }
 
-  def linkTo = "/" + aspect.is + "/" + identifier.is
-
+  /* TODO: This should really only validate uniqueness amongst its parent's
+    children */
   def uniqueIdentifier(errorMsg: ⇒ String)(identifier: String): List[FieldError] =
-    ContentPage.findContent(identifier, "pages") match {
+    ContentPage.findContent(identifier) match {
       case Full(p) if p.id.is == this.id.is => Nil // don't error on an update to this page
       case Full(p) => FieldError(this.identifier, errorMsg) :: Nil
       case _ => Nil
     }
+
+  // TODO: fix page order
+  def setParent(p: ContentPage) {
+    parent(p.id.is)
+  }
+
 }
 
 object ContentPage extends ContentPage with MongoMetaRecord[ContentPage] with Logger {
@@ -77,11 +81,8 @@ object ContentPage extends ContentPage with MongoMetaRecord[ContentPage] with Lo
         }
     }
 
-  // TODO: Check aspect == home or pages
-  def findContent(identifier: String, aspect: String) = {
-    warn("find content id: %s aspect: %s".format(identifier, aspect))
+  def findContent(identifier: String) =
     ContentPage.find("identifier" -> identifier)
-  }
 
   def ltSort(a: ContentPage, b: ContentPage) =
     a.ordering.is < b.ordering.is
@@ -94,9 +95,6 @@ object ContentPage extends ContentPage with MongoMetaRecord[ContentPage] with Lo
 
   def findAllChildItems(parent: ContentPage) =
     ContentPage.findAll(("parent") -> parent.id.is).sortWith(ltSort)
-
-  // TODO: fix page order
-  def setParent(p: ContentPage) = parent(p.id.is)
 
   def findByPosition(pos: Long, parent: ContentPage) =
     ContentPage.find(("ordering" -> pos) ~ ("parent" -> parent.id.is))
@@ -135,10 +133,7 @@ object ContentLocHelper extends Logger {
       case _: IllegalArgumentException => Empty
     }
 
-  lazy val item = ContentPage.createRecord
-    .title("")
-    .contents("")
-    .aspect("pages")
+  lazy val item = ContentPage.createRecord.title("").contents("")
 
   def NullCustomContent = item
   var root: ContentPage = null
@@ -146,7 +141,7 @@ object ContentLocHelper extends Logger {
   def ensureRoot() {
     root = ContentPage.find(("root") -> true) openOr {
       info("No root page found. Adding root page.")
-      ContentPage.createRecord.aspect("home").title("home").identifier("root").root(true).save
+      ContentPage.createRecord.title("home").identifier("root").root(true).save
     }
   }
 }

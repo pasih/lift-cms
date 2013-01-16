@@ -76,7 +76,7 @@ class AdminListPages extends Logger with AdminNotification {
       ContentPage.findAllInOrder.map(a => (a, a.title.is))
         (".editLink [href]" #> MenuGroups.editPage.createLink(Full(entry), Empty)  &
          ".order" #> entry.ordering.is.toString &
-         ".visitLink [href]" #> entry.linkTo &
+         // ".visitLink [href]" #> entry.linkTo &
          ".deleteLink" #> forNonRootPage(entry,
            SHtml.link("", () => ( deletePage(entry) ), Text(S ? "Delete"))) &
          ".addSubPage [href]" #> MenuGroups.editPage.createLink(Empty, Full(entry.id.is.toString)) &
