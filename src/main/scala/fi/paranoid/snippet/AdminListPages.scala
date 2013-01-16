@@ -38,12 +38,13 @@ class AdminListPages extends Logger with AdminNotification {
     }
 
   private def moveDown(page: ContentPage, f: => NodeSeq) = {
-    val n = ContentPage.countChildren(page.parent.obj.open_!) // TODO: open_!
-    warn("Page has " + n + " children.")
-    if (page.ordering.is == n - 1)
-      NodeSeq.Empty
-    else
-      f
+    page.parent.obj match {
+      case Full(p) =>
+        val n = ContentPage.countChildren(p)
+        if (page.ordering.is == n - 1) NodeSeq.Empty else f
+      case Empty =>
+        NodeSeq.Empty
+    }
   }
 
   private def doReorder(page: ContentPage, direction: Direction) {
@@ -56,16 +57,15 @@ class AdminListPages extends Logger with AdminNotification {
       return
     }
     val pos1: Long = page.ordering.is
-    val page2Box = ContentPage.findByPosition(posLookupDir(pos1), page.parent.obj.open_!)
-    if (page2Box.isEmpty) {
-      warn("Warning, no previous item.")
-      return
+
+    ContentPage.findByPosition(posLookupDir(pos1), page.parent.obj.open_!) match {
+      case Empty => warn("Warning, no previous item.")
+      case Full(p2) =>
+        p2.ordering(pos1).save
+        page.ordering(posLookupDir(pos1)).save
+        showEvent("#u reordered pages ('%s' and '%s')".format(p2.title.is, page.title.is), updateTreeView = true)
+        S.notice("Page order updated.")
     }
-    val page2 = page2Box.open_!
-    page2.ordering(pos1).save
-    page.ordering(posLookupDir(pos1)).save
-    showEvent("#u reordered pages ('%s' and '%s')".format(page2.title.is, page.title.is), updateTreeView = true)
-    S.notice("Page order updated.")
   }
 
   class AdminViewRenderer extends ContentTreeItemEntryRenderer {
