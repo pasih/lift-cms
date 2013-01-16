@@ -39,6 +39,8 @@ class ContentPage private() extends MongoRecord[ContentPage] with ObjectIdPk[Con
 
   object ordering extends LongField(this)
 
+  object showInMenu extends BooleanField(this, true)
+
   object root extends OptionalBooleanField(this)
 
   // TODO: cache
@@ -49,7 +51,7 @@ class ContentPage private() extends MongoRecord[ContentPage] with ObjectIdPk[Con
       Empty
 
   def editScreenFields = new FieldContainer {
-    def allFields = List(title, identifier, contents)
+    def allFields = List(title, identifier, contents, showInMenu)
   }
 
   /* TODO: This should really only validate uniqueness amongst its parent's
@@ -70,15 +72,10 @@ class ContentPage private() extends MongoRecord[ContentPage] with ObjectIdPk[Con
 
 object ContentPage extends ContentPage with MongoMetaRecord[ContentPage] with Logger {
   def findContentById(id: String): Box[ContentPage] =
-    id match {
-      case "addnew:page" => // TODO: Remove
-        Full(ContentLocHelper.NullCustomContent)
-      case _ =>
-        try {
-          ContentPage.find(new ObjectId(id))
-        } catch {
-          case _: IllegalArgumentException => Empty
-        }
+    try {
+      ContentPage.find(new ObjectId(id))
+    } catch {
+      case _: IllegalArgumentException => Empty
     }
 
   def findContent(identifier: String) =
@@ -136,6 +133,7 @@ object ContentLocHelper extends Logger {
   lazy val item = ContentPage.createRecord.title("").contents("")
 
   def NullCustomContent = item
+
   var root: ContentPage = null
 
   def ensureRoot() {
