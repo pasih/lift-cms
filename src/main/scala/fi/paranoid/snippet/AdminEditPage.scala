@@ -4,10 +4,11 @@ import net.liftweb._
 import common.{Empty, Failure, Full, Logger, Box}
 import http._
 import fi.paranoid.model.{ContentLocHelper, ContentPage}
-import xml.NodeSeq
+import xml._
 import net.liftweb.util.Helpers._
 import util.Html5
 import fi.paranoid.lib.AdminNotification
+import org.owasp.html._
 
 
 class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
@@ -23,10 +24,9 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
       parentId = a._2 openOr ""
   }
 
-  // TODO: Cleanup
   var editingPage = page match {
     case Full(p) => p
-    case Failure(_, _, _) => /* TODO: Handle gracefully */
+    case Failure(_, _, _) =>
       S.error("Page could not be edited!")
       S.redirectTo("/admin/")
     case Empty =>
@@ -36,7 +36,6 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
   object content extends ScreenVar(editingPage)
 
   val parentPage: Box[ContentPage] = ContentPage.findContentById(parentId.toString)
-  warn(parentPage)
 
   override def screenTop = newPage match {
     case true =>
@@ -63,18 +62,10 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
       case _ => // No-op
     }
 
-    val data = c.contents.is
-    val blank: Option[String] = None
-    val parsedContent = Html5.parse("<div>" + data + "</div>")
-    val filteredContent = parsedContent match {
-      // TODO use filteredContent
-      case Full(p) =>
-        ("script" #> NodeSeq.Empty &
-          "* [onClick]" #> blank).apply(p)
-      case _ => NodeSeq.Empty
-    }
-    warn(filteredContent)
+    val sanitizer = Sanitizers.FORMATTING and Sanitizers.BLOCKS and Sanitizers.IMAGES  and Sanitizers.LINKS and Sanitizers.STYLES
+    val data = sanitizer.sanitize(c.contents.is)
 
+    c.contents(data)
     c.save
     S.notice("Page '" + c.title.is + "' added!")
 
@@ -82,5 +73,6 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
       showEvent(S ? "#u added page: '%s'".format(c.title.is), updateTreeView = true)
     else
       showEvent(S ? "#u edited page: '%s'".format(c.title.is), updateTreeView = true)
+    S.redirectTo("/admin/")
   }
 }
