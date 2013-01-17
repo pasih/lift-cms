@@ -42,7 +42,7 @@ class AdminListPages extends Logger with AdminNotification {
       case Full(p) =>
         val n = ContentPage.countChildren(p)
         if (page.ordering.is == n - 1) NodeSeq.Empty else f
-      case Empty =>
+      case _ =>
         NodeSeq.Empty
     }
   }
@@ -59,12 +59,12 @@ class AdminListPages extends Logger with AdminNotification {
     val pos1: Long = page.ordering.is
 
     ContentPage.findByPosition(posLookupDir(pos1), page.parent.obj.open_!) match {
-      case Empty => warn("Warning, no previous item.")
       case Full(p2) =>
         p2.ordering(pos1).save
         page.ordering(posLookupDir(pos1)).save
         showEvent("#u reordered pages ('%s' and '%s')".format(p2.title.is, page.title.is), updateTreeView = true)
         S.notice("Page order updated.")
+      case _ => warn("Warning, no previous item.")
     }
   }
 

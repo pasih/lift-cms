@@ -3,11 +3,11 @@ package fi.paranoid.snippet
 import net.liftweb._
 import common.{Empty, Failure, Full, Logger, Box}
 import http._
-import fi.paranoid.model.{ContentLocHelper, ContentPage}
+import fi.paranoid.model.{ContentFragment, ContentLocHelper, ContentPage}
 import net.liftweb.util.Helpers._
 import fi.paranoid.lib.AdminNotification
 import fi.paranoid.lib.helpers.HtmlValidatorService
-
+import scala.xml._
 
 class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
   extends LiftScreen with Logger with AdminNotification {
@@ -29,9 +29,42 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
       S.redirectTo("/admin/")
     case Empty =>
       newPage = true
-      ContentPage.createRecord
+      ContentPage.createRecord.template("default")
   }
   object content extends ScreenVar(editingPage)
+
+  // Ensure template fields are available
+  // TODO: de-hardcode 'default' and warn if no template was found.
+  val template = Templates(List("cms-templates", content.template.is))
+
+  // Find out if we're calling the Content snippet and if so, return
+  // the areaId param
+  def areaId(item: String): Box[String] = {
+    item.split("\\?") match {
+      case Array("Content", b) =>
+        b.split("=") match {
+          case Array("areaId", id) => return Full(id)
+          case _ => Empty
+        }
+      case _ => Empty
+    }
+    Empty
+  }
+
+  var templatesUsed = List("")
+  template match {
+    case Full(t) =>
+      (t \\ "@class").foreach {
+        // Find all snippet calls and check if there's an areaId call in there
+        _.text.split(":").foreach( a =>
+          areaId(a) match {
+            case Full(f) => templatesUsed ::= f
+            case _ =>
+          })}
+    case _ =>
+      warn("Could not open a page template.")
+  }
+  warn("Templates used: " + templatesUsed.mkString)
 
   val parentPage: Box[ContentPage] = ContentPage.findContentById(parentId.toString)
 
@@ -45,6 +78,7 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
   }
 
   addFields(() => content.is.editScreenFields)
+  addFields(() => content.is.fragmentFields)
 
   override val cancelButton = super.cancelButton % ("class" -> "btn") % ("tabindex" -> "1")
   override val finishButton = super.finishButton % ("class" -> "btn btn-primary") % ("tabindex" -> "2")
@@ -59,8 +93,7 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
         c.ordering(ContentPage.countChildren(x))
       case _ => // No-op
     }
-
-    c.contents(HtmlValidatorService.validator.validate(c.contents.is))
+    c.template("page_sidebar")
     c.save
     S.notice("Page '" + c.title.is + "' added!")
 

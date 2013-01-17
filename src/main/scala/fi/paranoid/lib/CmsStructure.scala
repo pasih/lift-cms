@@ -19,10 +19,6 @@ class CmsNode(val page: ContentPage) extends Logger {
 
   def hasChild(identifier: String) =
     children.find(_.identifier == identifier)
-
-  // TODO: Cache, handle errors etc
-  def content =
-    page.content
 }
 
 object CmsStructure extends Logger {

@@ -52,7 +52,7 @@ object MongoConfig extends Loggable {
       case _ => {
         /*
          * First checks for existence of mongo.default.url. If not found, then
-         * checks for mongo.default.host, port, and name. Uses defaults if those
+         * checks for mongo.default.host, port, and fragmentName. Uses defaults if those
          * are not found.
          */
         val defaultDbAddress = Props.get("mongo.default.url")
@@ -60,7 +60,7 @@ object MongoConfig extends Loggable {
           .openOr(new DBAddress(
             Props.get("mongo.default.host", "localhost"),
             Props.getInt("mongo.default.port", 27017),
-            Props.get("mongo.default.name", "mcms")
+            Props.get("mongo.default.fragmentName", "mcms")
           ))
 
         /*

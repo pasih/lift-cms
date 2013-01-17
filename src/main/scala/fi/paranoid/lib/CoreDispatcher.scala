@@ -3,9 +3,8 @@ package fi.paranoid.lib
 import net.liftweb.http.rest.RestHelper
 import net.liftweb.http._
 import net.liftweb.common.{Full, Empty, Box, Logger}
-import net.liftweb.util.Helpers._
-import xml.Unparsed
 
+object currentNode extends RequestVar[CmsNode](null)
 
 object CoreDispatcher extends RestHelper with Logger {
 
@@ -14,18 +13,15 @@ object CoreDispatcher extends RestHelper with Logger {
       CmsStructure.lookup(str)
   }
 
-  // TODO: Move to an actual template
-  def template =
-    <lift:surround with="default" at="content"><lift:display /></lift:surround>
-
   def doPageDispatch(node: CmsNode, r: Req): Box[LiftResponse] = {
-    val template = Full(<lift:surround with="default" at="content">
-      { Unparsed(node.content.open_!.toString()) }
-      </lift:surround>)
+    currentNode(node)
+    info("Looking up page '%s'".format(node.page.title.is))
 
     for {
       session <- S.session
-      response <- session.processTemplate(template, r, ParsePath(List("fooz"), // TODO
+      template <- Templates(List("cms-templates", node.page.template.is))
+      t = session.processSurroundAndInclude(node.page.title.is, template)
+      response <- session.processTemplate(Full(t), r, ParsePath(List("fooz"), // TODO get rid of fooz
         "", absolute = false, endSlash = false), 200)
     } yield response
   }

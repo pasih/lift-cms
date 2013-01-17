@@ -1,16 +1,28 @@
 package fi.paranoid.model
 
-import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
-import net.liftweb.mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
+import net.liftweb.mongodb.record.{BsonMetaRecord, BsonRecord, MongoMetaRecord, MongoRecord}
+import net.liftweb.mongodb.record.field.{BsonRecordListField, ObjectIdRefField, ObjectIdPk}
 import net.liftweb.record.field._
 import net.liftweb.common._
 import net.liftweb.mongodb.BsonDSL._
 import net.liftweb.http.S
-import net.liftweb.util.{FieldContainer, Html5, FieldError}
+import net.liftweb.util.{BaseField, FieldContainer, Html5, FieldError}
 import net.liftweb.record.field.StringField
 import net.liftweb.common.{Full, Box}
 import xml.NodeSeq
 import org.bson.types.ObjectId
+
+class ContentFragment private() extends BsonRecord[ContentFragment] {
+  def meta = ContentFragment
+
+  object fragmentName extends StringField(this, 512)
+  object contents extends TextareaField(this, 1048576) {
+    override def displayName = fragmentName.is
+
+  }
+}
+
+object ContentFragment extends ContentFragment with BsonMetaRecord[ContentFragment]
 
 class ContentPage private() extends MongoRecord[ContentPage] with ObjectIdPk[ContentPage] with Logger {
   def meta = ContentPage
@@ -29,7 +41,8 @@ class ContentPage private() extends MongoRecord[ContentPage] with ObjectIdPk[Con
     override def setFilter = trim _ :: toLower _ :: super.setFilter
   }
 
-  object contents extends TextareaField(this, 1048576)
+  object template extends StringField(this, 512)
+  object contentFragments extends BsonRecordListField(this, ContentFragment)
 
   object publishAt extends DateTimeField(this)
 
@@ -43,15 +56,8 @@ class ContentPage private() extends MongoRecord[ContentPage] with ObjectIdPk[Con
 
   object root extends OptionalBooleanField(this)
 
-  // TODO: cache
-  def content: Box[NodeSeq] =
-    if (contents.value.nonEmpty)
-      Html5.parse("<div>" + contents.value + "</div>")
-    else
-      Empty
-
   def editScreenFields = new FieldContainer {
-    def allFields = List(title, identifier, contents, showInMenu)
+    def allFields = List(title, identifier, showInMenu)
   }
 
   /* TODO: This should really only validate uniqueness amongst its parent's
@@ -68,6 +74,15 @@ class ContentPage private() extends MongoRecord[ContentPage] with ObjectIdPk[Con
     parent(p.id.is)
   }
 
+  object FragmentFields extends FieldContainer {
+    def allFields: Seq[BaseField] = {
+      contentFragments.is.map(fragment =>
+        fragment.contents
+      )
+    }
+  }
+
+  def fragmentFields = FragmentFields
 }
 
 object ContentPage extends ContentPage with MongoMetaRecord[ContentPage] with Logger {
@@ -130,7 +145,7 @@ object ContentLocHelper extends Logger {
       case _: IllegalArgumentException => Empty
     }
 
-  lazy val item = ContentPage.createRecord.title("").contents("")
+  lazy val item = ContentPage.createRecord.title("")
 
   def NullCustomContent = item
 
@@ -139,7 +154,7 @@ object ContentLocHelper extends Logger {
   def ensureRoot() {
     root = ContentPage.find(("root") -> true) openOr {
       info("No root page found. Adding root page.")
-      ContentPage.createRecord.title("home").identifier("root").root(true).save
+      ContentPage.createRecord.title("home").identifier("root").template("default").root(true).save
     }
   }
 }
