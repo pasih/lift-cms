@@ -4,11 +4,9 @@ import net.liftweb._
 import common.{Empty, Failure, Full, Logger, Box}
 import http._
 import fi.paranoid.model.{ContentLocHelper, ContentPage}
-import xml._
 import net.liftweb.util.Helpers._
-import util.Html5
 import fi.paranoid.lib.AdminNotification
-import org.owasp.html._
+import fi.paranoid.lib.helpers.HtmlValidatorService
 
 
 class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
@@ -62,10 +60,7 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
       case _ => // No-op
     }
 
-    val sanitizer = Sanitizers.FORMATTING and Sanitizers.BLOCKS and Sanitizers.IMAGES  and Sanitizers.LINKS and Sanitizers.STYLES
-    val data = sanitizer.sanitize(c.contents.is)
-
-    c.contents(data)
+    c.contents(HtmlValidatorService.validator.validate(c.contents.is))
     c.save
     S.notice("Page '" + c.title.is + "' added!")
 
