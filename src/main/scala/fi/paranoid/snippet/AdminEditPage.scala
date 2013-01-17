@@ -51,20 +51,35 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
     Empty
   }
 
-  var templatesUsed = List("")
+  var fragmentsUsed = List("")
   template match {
     case Full(t) =>
       (t \\ "@class").foreach {
         // Find all snippet calls and check if there's an areaId call in there
         _.text.split(":").foreach( a =>
           areaId(a) match {
-            case Full(f) => templatesUsed ::= f
+            case Full(f) => fragmentsUsed ::= f
             case _ =>
           })}
     case _ =>
       warn("Could not open a page template.")
   }
-  warn("Templates used: " + templatesUsed.mkString)
+  warn("Templates used: " + fragmentsUsed.mkString)
+
+  // Remove all fragments not used by the template
+  // TODO: move to Trash
+  content.is.contentFragments(content.is.contentFragments.is.filter(fragment =>
+    if (fragment.fragmentName.is != "" && fragmentsUsed.contains(fragment.fragmentName.is)) {
+      fragmentsUsed = fragmentsUsed.filterNot(_ == fragment.fragmentName.is)
+      true
+    } else false
+  ))
+  // Add missing fragments
+  warn(content.is.contentFragments)
+  fragmentsUsed.foreach(a =>
+    content.is.contentFragments.atomicUpdate( ContentFragment.createRecord.fragmentName(a) :: _) )
+  warn(content.is.contentFragments)
+  warn("Missing fragments: " + fragmentsUsed.mkString)
 
   val parentPage: Box[ContentPage] = ContentPage.findContentById(parentId.toString)
 
@@ -80,8 +95,8 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
   addFields(() => content.is.editScreenFields)
   addFields(() => content.is.fragmentFields)
 
-  override val cancelButton = super.cancelButton % ("class" -> "btn") % ("tabindex" -> "1")
-  override val finishButton = super.finishButton % ("class" -> "btn btn-primary") % ("tabindex" -> "2")
+  override val cancelButton = super.cancelButton % ("class" -> "btn") % ("tabindex" -> "2")
+  override val finishButton = super.finishButton % ("class" -> "btn btn-primary") % ("tabindex" -> "1")
 
   override def allTemplatePath: List[String] = List("templates-hidden", "content-wizard")
 
