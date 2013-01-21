@@ -3,8 +3,11 @@ package fi.paranoid.lib
 import fi.paranoid.model.{ContentLocHelper, ContentPage}
 import net.liftweb.common._
 
-class CmsNode(val page: ContentPage) extends Logger {
-  private val identifier = page.identifier.is
+// TODO: Look up pages by ID rather than the human-readable identifier.
+// We need it for numerous things (ID updates, pages with same ID etc.)
+class CmsNode(private var p: ContentPage) extends Logger {
+  val identifier = p.identifier.is
+  private var refresh = false
 
   var parent: CmsNode = null
 
@@ -15,6 +18,20 @@ class CmsNode(val page: ContentPage) extends Logger {
     children ::= node
     info("Adding node %s (parent: %s)".format(node.identifier, this.identifier))
     node
+  }
+
+  def markDirty() { refresh = true }
+
+  def page = {
+    if (refresh) {
+      val update = ContentPage.findContent(identifier)
+      update match {
+        case Full(u) => info("Successfully refreshed page %s".format(identifier)); p = u
+        case _ => warn("Failed to refresh page from database!")
+      }
+      refresh = false
+    }
+    p
   }
 
   def hasChild(identifier: String) =
@@ -39,6 +56,30 @@ object CmsStructure extends Logger {
         elem
       case None => None
     }
+  }
+
+  def update(page: ContentPage) {
+    findByIdentifier(page.identifier.is) match {
+      // If this page is available, mark it dirty for a refresh from the DB.
+      case Some(n) =>
+        n.markDirty()
+      // If the page is not available, find its parent and add it.
+      case None =>
+        page.parent.obj.foreach ( a =>
+          findByIdentifier(a.identifier.is) match {
+            case Some(parent) =>
+              parent.addChild(new CmsNode(page))
+            case _ => error("CmsStructure update() failed for: %s".format(page.identifier.is))
+          }
+        )
+    }
+  }
+
+  def findByIdentifier(identifier: String) = {
+    if (identifier == root.identifier)
+      Some(root)
+    else
+      root.hasChild(identifier)
   }
 
   def load() {

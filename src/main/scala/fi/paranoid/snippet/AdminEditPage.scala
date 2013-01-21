@@ -5,7 +5,7 @@ import common.{Empty, Failure, Full, Logger, Box}
 import http._
 import fi.paranoid.model.{ContentFragment, ContentLocHelper, ContentPage}
 import net.liftweb.util.Helpers._
-import fi.paranoid.lib.AdminNotification
+import fi.paranoid.lib.{CmsStructure, AdminNotification}
 import fi.paranoid.lib.helpers.HtmlValidatorService
 import scala.xml._
 
@@ -75,7 +75,7 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
   ))
   // Add missing fragments
   fragmentsUsed.foreach(a =>
-      content.is.contentFragments.atomicUpdate( ContentFragment.createRecord.fragmentName(a) :: _))
+      content.is.contentFragments.atomicUpdate(ContentFragment.createRecord.fragmentName(a) :: _))
 
   // TODO: Add validation for fragments
 
@@ -108,6 +108,8 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
     }
     c.save
     S.notice("Page '" + c.title.is + "' added!")
+
+    CmsStructure.update(c)
 
     if (newPage)
       showEvent(S ? "#u added page: '%s'".format(c.title.is), updateTreeView = true)
