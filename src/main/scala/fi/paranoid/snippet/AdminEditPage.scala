@@ -51,7 +51,7 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
     Empty
   }
 
-  var fragmentsUsed = List("")
+  var fragmentsUsed: List[String] = List()
   template match {
     case Full(t) =>
       (t \\ "@class").foreach {
@@ -64,7 +64,6 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
     case _ =>
       warn("Could not open a page template.")
   }
-  warn("Templates used: " + fragmentsUsed.mkString)
 
   // Remove all fragments not used by the template
   // TODO: move to Trash
@@ -75,11 +74,8 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
     } else false
   ))
   // Add missing fragments
-  warn(content.is.contentFragments)
   fragmentsUsed.foreach(a =>
-    content.is.contentFragments.atomicUpdate( ContentFragment.createRecord.fragmentName(a) :: _) )
-  warn(content.is.contentFragments)
-  warn("Missing fragments: " + fragmentsUsed.mkString)
+      content.is.contentFragments.atomicUpdate( ContentFragment.createRecord.fragmentName(a) :: _))
 
   val parentPage: Box[ContentPage] = ContentPage.findContentById(parentId.toString)
 
@@ -108,7 +104,6 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
         c.ordering(ContentPage.countChildren(x))
       case _ => // No-op
     }
-    c.template("page_sidebar")
     c.save
     S.notice("Page '" + c.title.is + "' added!")
 
