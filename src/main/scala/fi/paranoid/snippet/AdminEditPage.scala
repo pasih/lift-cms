@@ -77,6 +77,8 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
   fragmentsUsed.foreach(a =>
       content.is.contentFragments.atomicUpdate( ContentFragment.createRecord.fragmentName(a) :: _))
 
+  // TODO: Add validation for fragments
+
   val parentPage: Box[ContentPage] = ContentPage.findContentById(parentId.toString)
 
   override def screenTop = newPage match {
