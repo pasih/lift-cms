@@ -86,6 +86,10 @@ class ContentPage private() extends MongoRecord[ContentPage] with ObjectIdPk[Con
 }
 
 object ContentPage extends ContentPage with MongoMetaRecord[ContentPage] with Logger {
+
+  def findContentById(id: ObjectId): Box[ContentPage] =
+    ContentPage.find(id)
+
   def findContentById(id: String): Box[ContentPage] =
     try {
       ContentPage.find(new ObjectId(id))

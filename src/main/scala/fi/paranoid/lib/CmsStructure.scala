@@ -2,10 +2,13 @@ package fi.paranoid.lib
 
 import fi.paranoid.model.{ContentLocHelper, ContentPage}
 import net.liftweb.common._
+import org.bson.types.ObjectId
+
 
 // TODO: Look up pages by ID rather than the human-readable identifier.
 // We need it for numerous things (ID updates, pages with same ID etc.)
 class CmsNode(private var p: ContentPage) extends Logger {
+  val objectId = p.id.is
   val identifier = p.identifier.is
   private var refresh = false
 
@@ -24,7 +27,7 @@ class CmsNode(private var p: ContentPage) extends Logger {
 
   def page = {
     if (refresh) {
-      val update = ContentPage.findContent(identifier)
+      val update = ContentPage.findContentById(objectId)
       update match {
         case Full(u) => info("Successfully refreshed page %s".format(identifier)); p = u
         case _ => warn("Failed to refresh page from database!")
@@ -33,6 +36,9 @@ class CmsNode(private var p: ContentPage) extends Logger {
     }
     p
   }
+
+  def hasChild(objectId: ObjectId) =
+    children.find(_.objectId == objectId)
 
   def hasChild(identifier: String) =
     children.find(_.identifier == identifier)
@@ -59,14 +65,14 @@ object CmsStructure extends Logger {
   }
 
   def update(page: ContentPage) {
-    findByIdentifier(page.identifier.is) match {
+    findByObjectId(page.id.is) match {
       // If this page is available, mark it dirty for a refresh from the DB.
       case Some(n) =>
         n.markDirty()
       // If the page is not available, find its parent and add it.
       case None =>
         page.parent.obj.foreach ( a =>
-          findByIdentifier(a.identifier.is) match {
+          findByObjectId(a.id.is) match {
             case Some(parent) =>
               parent.addChild(new CmsNode(page))
             case _ => error("CmsStructure update() failed for: %s".format(page.identifier.is))
@@ -74,6 +80,12 @@ object CmsStructure extends Logger {
         )
     }
   }
+
+  def findByObjectId(id: ObjectId) =
+    if (id == root.objectId)
+      Some(root)
+    else
+      root.hasChild(id)
 
   def findByIdentifier(identifier: String) = {
     if (identifier == root.identifier)
