@@ -3,12 +3,14 @@ package fi.paranoid.snippet
 import net.liftweb._
 import common.{Empty, Failure, Full, Logger, Box}
 import http._
-import fi.paranoid.model.{ContentFragment, ContentLocHelper, ContentPage}
+import fi.paranoid.model.{PageTemplates, ContentFragment, ContentLocHelper, ContentPage}
 import net.liftweb.util.Helpers._
 import fi.paranoid.lib.{CmsStructure, AdminNotification}
-import fi.paranoid.lib.helpers.HtmlValidatorService
-import scala.xml._
 
+/* TODO: refactor this into smaller chunks. The fragment drop code
+   should go into ContentPage. Right now there's far too much
+   code in the class body.
+ */
 class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
   extends LiftScreen with Logger with AdminNotification {
 
@@ -33,38 +35,7 @@ class AdminEditPage(params: Box[(Box[ContentPage], Box[String])])
   }
   object content extends ScreenVar(editingPage)
 
-  // Ensure template fields are available
-  // TODO: de-hardcode 'default' and warn if no template was found.
-  val template = Templates(List("cms-templates", content.template.is))
-
-  // Find out if we're calling the Content snippet and if so, return
-  // the areaId param
-  def areaId(item: String): Box[String] = {
-    item.split("\\?") match {
-      case Array("Content", b) =>
-        b.split("=") match {
-          case Array("areaId", id) => return Full(id)
-          case _ => Empty
-        }
-      case _ => Empty
-    }
-    Empty
-  }
-
-  var fragmentsUsed: List[String] = List()
-  template match {
-    case Full(t) =>
-      (t \\ "@class").foreach {
-        // Find all snippet calls and check if there's an areaId call in there
-        _.text.split(":").foreach( a =>
-          areaId(a) match {
-            case Full(f) => fragmentsUsed ::= f
-            case _ =>
-          })}
-    case _ =>
-      warn("Could not open a page template.")
-  }
-
+  var fragmentsUsed = PageTemplates.listContentFragments(content.is.template.is)
   // Remove all fragments not used by the template
   // TODO: move to Trash
   content.is.contentFragments(content.is.contentFragments.is.filter(fragment =>
