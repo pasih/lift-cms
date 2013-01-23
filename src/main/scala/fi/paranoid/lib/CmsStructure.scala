@@ -37,7 +37,7 @@ class CmsNode(private var p: ContentPage) extends Logger {
     p
   }
 
-  def hasChild(objectId: ObjectId) =
+  def hasChildById(objectId: ObjectId) =
     children.find(_.objectId == objectId)
 
   def hasChild(identifier: String) =
@@ -85,7 +85,7 @@ object CmsStructure extends Logger {
     if (id == root.objectId)
       Some(root)
     else
-      root.hasChild(id)
+      root.hasChildById(id)
 
   def findByIdentifier(identifier: String) = {
     if (identifier == root.identifier)
